@@ -56,6 +56,6 @@ describe('Test CSV file operations', function() {
     });
   });
   xit('should transform csv to JSON object', function() {
-
+    // TODO: test reading and converting csv to JSON
   });
 })
