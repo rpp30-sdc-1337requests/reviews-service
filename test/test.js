@@ -2,11 +2,6 @@ const chai = require('chai');
 const expect = chai.expect;
 const sinon = require('sinon');
 
-const mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
-
-const fs = require('fs/promises');
-
 function once(func) {
   let result;
   let called = false;
