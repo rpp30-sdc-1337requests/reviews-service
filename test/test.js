@@ -70,7 +70,7 @@ describe('Test CSV file operations', function() {
 
     fs.open(filename, (err, fd) => {
       let stream = fs.createReadStream(filename, { fd: fd });
-      let rl = readline.createInterface({ input: stream , terminal: false });
+      let rl = readline.createInterface({ input: stream, terminal: false });
 
       let testObj = {};
       let keys = [];
@@ -93,4 +93,5 @@ describe('Test CSV file operations', function() {
     });
 
   });
+
 });
