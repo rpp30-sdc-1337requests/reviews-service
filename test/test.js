@@ -1,6 +1,9 @@
 const chai = require('chai');
 const expect = chai.expect;
 const sinon = require('sinon');
+const chaiHttp = require('chai-http');
+const server = require('../server/app.js');
+chai.use(chaiHttp);
 
 const mongoose = require('mongoose');
 
@@ -55,7 +58,13 @@ describe('Test CSV file operations', function() {
         fileOpen = true;
       }
 
-      expect(fileOpen).to.equal(true);
+      fs.close(fd, (err) => {
+        if(err) {
+          console.log('Error closing file')
+        } else {
+          expect(fileOpen).to.equal(true);
+        }
+      });
     });
   });
 
@@ -88,10 +97,24 @@ describe('Test CSV file operations', function() {
         }
       });
       stream.on('end', () => {
+        rl.close();
         expect(testObj).to.deep.equal(expectedObj);
       });
     });
 
   });
 
+});
+
+describe('Route GET /reviews', function() {
+  it('should return reviews for the given product id', (done) => {
+    const product_id = 1;
+    chai.request(server)
+      .get(`/reviews?product_id=${product_id}`)
+      .end((err, res) => {
+        expect(res.status).to.equal(200);
+        expect(res.body).to.be.an('array');
+        done();
+      });
+  });
 });

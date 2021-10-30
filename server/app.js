@@ -34,3 +34,9 @@ app.put('/reviews/*/helpful', (req, res) => {
 app.put('/reviews/*/report', (req, res) => {
 
 });
+
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
+
+module.exports = app; // required for testing
