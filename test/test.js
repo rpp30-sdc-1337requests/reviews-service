@@ -36,8 +36,9 @@ describe('Testing testing', function() {
 });
 
 describe('Testing MongoDB connection', function() {
+  this.timeout(5000);
   before( function(done) {
-    mongoose.connect('mongodb://localhost:27017/reviewdb', done);
+    mongoose.connect('mongodb://localhost:27017/test', done);
   });
   it('should connect to mongodb through mongoose', function() {
     const CONNECTED = 1;
@@ -49,7 +50,7 @@ describe('Test CSV file operations', function() {
 
   const filename = 'test/sample.csv';
 
-  it('should open a file from disc', function() {
+  it('should open a file from disc', function(done) {
     let fileOpen = false;
     fs.open(filename, (err, fd) => {
       if (err) {
@@ -60,15 +61,17 @@ describe('Test CSV file operations', function() {
 
       fs.close(fd, (err) => {
         if(err) {
-          console.log('Error closing file')
+          console.log('Error closing file');
+          done();
         } else {
           expect(fileOpen).to.equal(true);
+          done();
         }
       });
     });
   });
 
-  it('should transform csv to JSON object', function() {
+  it('should transform csv to JSON object', function(done) {
 
     let expectedObj = {
       id: '100',
@@ -99,11 +102,10 @@ describe('Test CSV file operations', function() {
       stream.on('end', () => {
         rl.close();
         expect(testObj).to.deep.equal(expectedObj);
+        done();
       });
     });
-
   });
-
 });
 
 describe('Route GET /reviews', function() {
@@ -113,7 +115,7 @@ describe('Route GET /reviews', function() {
       .get(`/reviews?product_id=${product_id}`)
       .end((err, res) => {
         expect(res.status).to.equal(200);
-        expect(res.body).to.be.an('array');
+        expect(res.body).to.be.an('object');
         done();
       });
   });
