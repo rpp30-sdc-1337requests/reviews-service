@@ -1,12 +1,41 @@
 const express = require('express');
 const app = express();
+const bodyparser = require('body-parser');
 // TODO: import DB methods here
+const db = require('../database/database.js');
 
 const port = 1337;
+
+app.use(bodyparser.urlencoded({ extended: true }));
+app.use(bodyparser.json());
 
 // reviews route for specific product
 // params: page, count, sort, product_id
 app.get('/reviews', (req, res) => {
+  let product_id = parseInt(req.query.product_id);
+  console.log('req product_id: ', product_id);
+  let page = parseInt(req.query.page) || 0;
+  let count = parseInt(req.query.count)  || 5;
+  // sort options: newest, helpful, relevant
+  let sort = req.query.sort || 'newest';
+
+  let response = {
+    'product': product_id,
+    'page': page,
+    'count': count,
+    'results': []
+  };
+
+  db.getReviews(product_id, (err, data) => {
+    if(err) {
+      console.error('Error retrieving review: ', err);
+    } else {
+      console.log('server data: ', data);
+      response.results = data;
+      console.log('Response object: ', response);
+      res.send(response);
+    }
+  });
 
 });
 

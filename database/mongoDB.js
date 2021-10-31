@@ -14,13 +14,22 @@ const reviewsSchema = new Schema({
   date: { type: Date, required: true },
   reviewer_name: { type: String, required: true },
   helpfulness: { type: Number, default: 0 },
-  photos: [{ id: Number, url: String }],
-  characteristics: {
-    size: { id: Number, value: { type: String, default: "none selected" }},
-    width: { id: Number, value: { type: String, default: "none selected" }},
-    comfort: { id: Number, value: { type: String, default: "none selected" }},
-    quality: { id: Number, value: { type: String, default: "none selected" }},
-    length: { id: Number, value: { type: String, default: "none selected" }},
-    fit: { id: Number, value: { type: String, default: "none selected" }},
-  }
+  photos: [{ id: Number, url: String }]
+});
+
+const characteristicsSchema = new Schema({
+  id: Number,
+  product_id: Number,
+  name: String
+});
+
+const photosSchema = new Schema({
+  review_id: { type: Number, required: true },
+  url : { type: String, required: true }
+});
+
+const charsReviewSchema = new Schema({
+  characteristic_id: Number,
+  review_id: Number,
+  value: Number
 });
