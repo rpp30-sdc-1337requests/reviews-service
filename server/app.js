@@ -42,7 +42,18 @@ app.get('/reviews', (req, res) => {
 // reviews meta route for product
 // params: product_id
 app.get('/reviews/meta', (req, res) => {
+  let product_id = parseInt(req.query.product_id);
 
+  db.getMetadata(product_id, (err, data) => {
+    if(err) {
+      console.error('Error retrieving metadata: ', err);
+    } else {
+      console.log('server data: ', data);
+      response = data;
+      console.log('Response object: ', response);
+      res.send(response);
+    }
+  })
 });
 
 // reviews post route for new review on product

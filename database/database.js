@@ -81,35 +81,153 @@ module.exports.getReviews = (id, callback) => {
   aggregateCollection(coll, reviewsQuery(id), callback);
 }
 
+// ratings by star, recommended counts, characteristics
+let ratingQuery = (idIn) => {
+  return [
+    {
+      $match: {
+        $expr: {
+          $eq: [
+            "$product_id", idIn
+          ]
+        }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        rating: 1
+      }
+    },
+    {
+      $group: {
+        _id: '$rating',
+        count: {
+          $count: {}
+        }
+      }
+    },
+    {
+      $sort: {
+        _id: 1
+      }
+    }
+  ]
+};
 
+let recommendQuery = (idIn) => {
+  return [
+    {
+      $match: {
+        $expr: {
+          $eq: [
+            "$product_id", idIn
+          ]
+        }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        recommend: 1
+      }
+    },
+    {
+      $group: {
+        _id: { $toInt: '$recommend' },
+        ratings: {
+          $count: {}
+        }
+      }
+    },
+    {
+      $sort: {
+        _id: 1
+      }
+    }
+  ]
+};
 
+let charsQuery = (idIn) => {
+  return [
+    {
+      $match: {
+        $expr: {
+          $eq: [
+            "$product_id", idIn
+          ]
+        }
+      }
+    },
+    {
+      $lookup: {
+        from: 'characteristic_reviews',
+        localField: 'id',
+        foreignField: 'characteristic_id',
+        pipeline: [
+          { $project: {
+            _id: 0,
+            'id': '$characteristic_id',
+            value: 1
+          }},
+          { $group: {
+            _id: '$id',
+            value: { $avg: '$value' }
+          }}],
+        as: 'characteristics'
+      }
+    }
+  ];
+};
 
-
-
-// load file(s)
-  // batch data?
-
-// load characteristics to object for comparison transforms
-
-// maybe need to use $lookup to match by review id
-
-const reviewSchema = new mongoose.Schema({
-  id: { type: Number, required: true },
-  product_id: { type: Number, required: true },
-  rating: { type: Number, required: true },
-  date: { type: Date, required: true },
-  summary: { type: String, required: true },
-  body: { type: String, required: true },
-  recommend: { type: Boolean, required: true },
-  reported: { type: Boolean, required: true },
-  reviewer_name: { type: String, required: true },
-  reviewer_email: { type: String, required: true },
-  response: { type: String, default: null },
-  helpfulness: { type: Number, default: 0 }
-});
-
-const photoSchema = new mongoose.Schema({
-  id: { type: Number, required: true },
-  review_id: { type: Number, required: true },
-  url : { type: String, required: true }
-});
+module.exports.getMetadata = (id, callback) => {
+  let result = {
+    product_id: id.toString(),
+    ratings: {},
+    recommend: {},
+    characteristics: {}
+  };
+  let coll = 'reviews';
+  let ratingMeta = [];
+  let recommendMeta = [];
+  let charsMeta = [];
+  aggregateCollection(coll, ratingQuery(id), (err, data) => {
+    if (err) {
+      callback(err);
+    } else {
+      ratingMeta = data;
+      aggregateCollection(coll, recommendQuery(id), (err, data) => {
+        if (err) {
+          callback(err);
+        } else {
+          recommendMeta = data;
+          coll = 'characteristics';
+          aggregateCollection(coll, charsQuery(id), (err, data) => {
+            if (err) {
+              callback(err);
+            } else {
+              charsMeta = data;
+              ratingMeta.forEach( obj => {
+                result.ratings[obj._id] = obj.count;
+              })
+              recommendMeta.forEach( obj => {
+                result.recommend[obj._id] = obj.ratings;
+              })
+              charsMeta.forEach( obj => {
+                result.characteristics[obj.name] = {
+                  'id': obj.characteristics[0]._id,
+                  'value': obj.characteristics[0].value.toLocaleString(undefined, {minimumFractionDigits: 4})
+                }
+              })
+              console.log('ratingMeta: ', ratingMeta);
+              console.log('recommendMeta: ', recommendMeta);
+              console.log('charsMeta: ', charsMeta);
+              console.log('server result: ', result);
+              callback(null, result);
+            }
+          });
+        }
+      });
+    }
+  });
+};

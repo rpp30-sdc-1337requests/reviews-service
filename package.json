@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "test": "mocha",
-    "coverage": "nyc --all mocha --exit"
+    "coverage": "nyc --all mocha --exit",
+    "server": "nodemon server/app.js"
   },
   "repository": {
     "type": "git",
