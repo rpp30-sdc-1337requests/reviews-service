@@ -5,8 +5,7 @@ const { Schema } = mongoose;
 
 module.exports.reviewsSchema = new Schema({
   id: { type: Number, required: true },
-  product: { type: Number, required: true },
-  review_id: { type: Number, required: true },
+  product_id: { type: Number, required: true },
   rating: { type: Number, required: true },
   summary: { type: String, required: true },
   recommend: { type: Boolean, required: true },
@@ -14,7 +13,9 @@ module.exports.reviewsSchema = new Schema({
   body: { type: String, required: true },
   date: { type: Number, required: true },
   reviewer_name: { type: String, required: true },
-  helpfulness: { type: Number, default: 0 }
+  reviewer_email: { type: String, required: true},
+  helpfulness: { type: Number, default: 0 },
+  reported: { type: Boolean, default: false}
 });
 
 module.exports.photosSchema = new Schema({

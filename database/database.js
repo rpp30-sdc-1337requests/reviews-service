@@ -222,7 +222,7 @@ const Photo = mongoose.model('Photo', photosSchema, 'reviews_photos');
 const Characteristic = mongoose.model('Characteristic', charsReviewSchema, 'characteristic_reviews');
 
 module.exports.addReview = (data, cb) => {
-  let reviewData = {
+  let reviewData = [{
     id: max_ids.review_id + 1,
     product_id: data.product_id,
     rating: data.rating,
@@ -235,7 +235,7 @@ module.exports.addReview = (data, cb) => {
     reviewer_email: data.email,
     response: null,
     helpfulness: 0
-  };
+  }];
 
   let photoData = [];
   if (data.photos.length > 0) {
@@ -261,7 +261,9 @@ module.exports.addReview = (data, cb) => {
     max_ids.chars_review_id++;
   }
 
-  Review.insert(reviewData)
+  let newReview = new Review(reviewData);
+
+  Review.insertMany(reviewData)
     .then(() => {
       max_ids.review_id++;
       return;
@@ -297,15 +299,18 @@ module.exports.addReview = (data, cb) => {
     }).then(() => {
 
       MaxIds.findOneAndUpdate(max_id_query, max_ids)
-        .then(() => {
-          console.log('Review Data Insert Success');
+        .then((response) => {
+          // console.log('Review Data Insert Success: ', response);
           cb(null, true);
+
         }).catch((err) => {
-          console.error.bind(console, 'Error updating max_ids: ' + err);
-          cb(err);
+          if (err) {
+            console.log('Error updating max_ids: ', err);
+            cb(err);
+          }
         });
     });
-}
+};
   // review post req.body:  {
   //   product_id: 47425,
   //   rating: 2,

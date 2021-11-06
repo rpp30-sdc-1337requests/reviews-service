@@ -61,6 +61,13 @@ app.get('/reviews/meta', (req, res) => {
 app.post('/reviews', (req, res) => {
   console.log('review post req.params: ', req.params);
   console.log('review post req.body: ', req.body);
+  db.addReview(req.body, (err, success) => {
+    if (err) {
+      res.status(400).send(err);
+    } else if (success) {
+      res.status(201).end();
+    }
+  });
   // review post req.body:  {
   //   product_id: 47425,
   //   rating: 2,
