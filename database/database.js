@@ -10,7 +10,7 @@ const connection = mongoose.connection;
 connection.on('error', console.error.bind(console, 'conection error: '));
 
 // store max ids for data insertion
-let MaxIds = mongoose.model('MaxIds', maxIdSchema, 'max_ids' );
+const MaxIds = mongoose.model('MaxIds', maxIdSchema, 'max_ids' );
 
 let max_id_query = {};
 let max_ids = {
@@ -18,6 +18,10 @@ let max_ids = {
   "chars_review_id": null,
   "photo_id": null
 };
+
+const Review = mongoose.model('Review', reviewsSchema, 'reviews');
+const Photo = mongoose.model('Photo', photosSchema, 'reviews_photos');
+const Characteristic = mongoose.model('Characteristic', charsReviewSchema, 'characteristic_reviews');
 
 // helper function to query a specific collection
 const findInCollection = (name, query, cb) => {
@@ -41,37 +45,23 @@ connection.once('open', function () {
   });
 });
 
-// query tests
-
-
-let coll = 'reviews';
-let query = { id: 1 };
-let callback = (err, data) => {
-  if (err) {
-    throw err;
-    return;
-  }
-  console.log('query data:', data);
-  return;
-};
-
-// findInCollection(coll, query, callback);
-
 const aggregateCollection = (name, query, cb) => {
-  let collection = mongoose.connection.collection(name);
+  let collection = connection.collection(name);
   // console.log('collection: ', collection);
   collection.aggregate(query).toArray()
     .then(doc => {
       cb(null, doc);
+      return;
     }).catch(err => {
       cb(err);
     });
-}
+};
 
-let reviewsQuery = (id) => {
+
+let reviewsQuery = (idIn) => {
   return [
     { $match:
-      { product_id: id, reported: false }
+      { product_id: idIn, reported: false }
     },
     { $project:
       { _id: 0,
@@ -97,12 +87,12 @@ let reviewsQuery = (id) => {
       }
     }
   ];
-}
+};
 
 module.exports.getReviews = (id, callback) => {
   coll = 'reviews';
   aggregateCollection(coll, reviewsQuery(id), callback);
-}
+};
 
 // ratings by star, recommended counts, characteristics
 let ratingQuery = (idIn) => {
@@ -217,9 +207,6 @@ module.exports.getMetadata = (id, callback) => {
   });
 };
 
-const Review = mongoose.model('Review', reviewsSchema, 'reviews');
-const Photo = mongoose.model('Photo', photosSchema, 'reviews_photos');
-const Characteristic = mongoose.model('Characteristic', charsReviewSchema, 'characteristic_reviews');
 
 module.exports.addReview = (data, cb) => {
   let reviewData = [{
@@ -311,14 +298,44 @@ module.exports.addReview = (data, cb) => {
         });
     });
 };
-  // review post req.body:  {
-  //   product_id: 47425,
-  //   rating: 2,
-  //   summary: 'r',
-  //   body: 'reasdfawefaaaaaaaaaaaaaaaaawefasdfawefasdfafefefefe',
-  //   recommend: false,
-  //   name: 'e',
-  //   email: 'eeee@eff.eee',
-  //   photos: [],
-  //   characteristics: { '159172': 2, '159173': 2, '159174': 2, '159175': 2 }
-  // }
+
+
+module.exports.markHelpful = (reviewId, cb) => {
+
+  let collection = connection.collection('reviews');
+  let score;
+  collection.findOne({ id: reviewId })
+    .then(doc => {
+      console.log('helpful doc found: ', doc);
+      score = doc.helpfulness + 1;
+    })
+    .catch(err => {
+      cb(err);
+    })
+    .then(() => {
+      Review.findOneAndUpdate({ id: reviewId }, { helpfulness: score })
+        .then((saved) => {
+          console.log('Helpful save response: ', saved);
+          cb(null, saved);
+          return;
+        })
+        .catch(err => {
+          console.log('Error saving: ', err);
+          cb(err);
+        });
+    });
+};
+
+module.exports.reportReview = (reviewId, cb) => {
+
+  Review.findOneAndUpdate({ id: reviewId }, { reported: true })
+    .then((saved) => {
+      console.log('Report save response: ', saved);
+      cb(null, saved);
+      return;
+    })
+    .catch(err => {
+      console.log('Error saving: ', err);
+      cb(err);
+    });
+};
