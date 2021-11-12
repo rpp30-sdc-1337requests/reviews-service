@@ -106,3 +106,4 @@ dist
 # mine
 etlnotes.txt
 k6script.js
+*.pem
