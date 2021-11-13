@@ -172,7 +172,6 @@ module.exports.getMetadata = (id, callback) => {
   let recommendMeta = [];
   let charsMeta = [];
 
-  // query callback heck
   aggregateCollection(coll, ratingQuery(id), (err, data) => {
     if (err) {
       callback(err);
@@ -202,7 +201,6 @@ module.exports.getMetadata = (id, callback) => {
                     'value': obj.characteristics[0].value.toLocaleString(undefined, {minimumFractionDigits: 4})
                   }
                 }
-
               });
               callback(null, result);
             }
@@ -312,7 +310,6 @@ module.exports.markHelpful = (reviewId, cb) => {
   let score;
   collection.findOne({ id: reviewId })
     .then(doc => {
-      // console.log('helpful doc found: ', doc);
       score = doc.helpfulness + 1;
     })
     .catch(err => {
@@ -321,7 +318,6 @@ module.exports.markHelpful = (reviewId, cb) => {
     .then(() => {
       Review.findOneAndUpdate({ id: reviewId }, { helpfulness: score })
         .then((saved) => {
-          // console.log('Helpful save response: ', saved);
           cb(null, saved);
           return;
         })
@@ -336,7 +332,6 @@ module.exports.reportReview = (reviewId, cb) => {
 
   Review.findOneAndUpdate({ id: reviewId }, { reported: true })
     .then((saved) => {
-      // console.log('Report save response: ', saved);
       cb(null, saved);
       return;
     })
