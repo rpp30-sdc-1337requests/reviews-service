@@ -1,7 +1,7 @@
 const fs = require('fs');
 const readline = require('readline');
 const mongoose = require('mongoose');
-const { reviewsSchema, charsReviewSchema, photosSchema, maxIdSchema } = require('./schemas.js');
+const { reviewsSchema, charsReviewSchema, photosSchema, nextIdSchema } = require('./schemas.js');
 
 mongoose.connect('mongodb://localhost:27017/reviews_service', {
   useNewUrlParser: true,
@@ -12,11 +12,11 @@ const connection = mongoose.connection;
 
 connection.on('error', console.error.bind(console, 'conection error: '));
 
-// store max ids for data insertion
-const MaxIds = mongoose.model('MaxIds', maxIdSchema, 'max_ids' );
+// store next ids for data insertion
+const NextIds = mongoose.model('NextIds', nextIdSchema, 'next_ids' );
 
-let max_id_query = {};
-let max_ids = {
+let next_id_query = {};
+let next_ids = {
   "review_id": null,
   "chars_review_id": null,
   "photo_id": null
@@ -35,15 +35,15 @@ const findInCollection = (name, query, cb) => {
 // notify when database connection succeeds
 connection.once('open', function () {
   console.log('Connected to Database');
-  // load max ids on db start
-  findInCollection('max_ids', {}, (err, data) => {
+  // load next ids on db start
+  findInCollection('next_ids', {}, (err, data) => {
     if (err) {
-      console.log('Error loading max ids');
+      console.log('Error loading next ids');
     } else {
-      max_id_query = { _id: data[0]._id };
-      max_ids.review_id = data[0].review_id;
-      max_ids.chars_review_id = data[0].chars_review_id;
-      max_ids.photo_id = data[0].photo_id;
+      next_id_query = { _id: data[0]._id };
+      next_ids.review_id = data[0].review_id;
+      next_ids.chars_review_id = data[0].chars_review_id;
+      next_ids.photo_id = data[0].photo_id;
     }
   });
 });
@@ -216,7 +216,7 @@ module.exports.getMetadata = (id, callback) => {
 
 module.exports.addReview = (data, cb) => {
   let reviewData = [{
-    id: max_ids.review_id + 1,
+    id: next_ids.review_id,
     product_id: data.product_id,
     rating: data.rating,
     date: Date.now(),
@@ -235,30 +235,30 @@ module.exports.addReview = (data, cb) => {
     // setup photo objects for insert
     data.photos.forEach( photo => {
       photoData.push({
-        id: max_ids.photo_id + 1,
-        review_id: max_ids.review_id + 1,
+        id: next_ids.photo_id,
+        review_id: next_ids.review_id,
         url: photo
       });
-      max_ids.photo_id++;
+      next_ids.photo_id++;
     });
   }
 
   let charReviewData = [];
   for (const key in data.characteristics) {
     charReviewData.push({
-      id: max_ids.chars_review_id + 1,
+      id: next_ids.chars_review_id,
       characteristic_id: key,
-      review_id: max_ids.review_id + 1,
+      review_id: next_ids.review_id,
       value: data.characteristics[key]
     });
-    max_ids.chars_review_id++;
+    next_ids.chars_review_id++;
   }
 
   let newReview = new Review(reviewData);
 
   Review.insertMany(reviewData)
     .then(() => {
-      max_ids.review_id++;
+      next_ids.review_id++;
       return;
     }).catch((err) => {
       console.error.bind(console, 'Error inserting review data: ' + err);
@@ -272,7 +272,7 @@ module.exports.addReview = (data, cb) => {
             return;
           }).catch((err) => {
             console.error.bind(console, 'Error inserting photo data: ' + err);
-            max_ids.photo_id -= photoData.length;
+            next_ids.photo_id -= photoData.length;
             cb(err);
           });
       }
@@ -285,20 +285,20 @@ module.exports.addReview = (data, cb) => {
             return;
           }).catch((err) => {
             console.error.bind(console, 'Error inserting characteristic data: ' + err);
-            max_ids.chars_review_id -= charReviewData.length;
+            next_ids.chars_review_id -= charReviewData.length;
             cb(err);
           });
       }
     }).then(() => {
 
-      MaxIds.findOneAndUpdate(max_id_query, max_ids)
+      NextIds.findOneAndUpdate(next_id_query, next_ids)
         .then((response) => {
           // console.log('Review Data Insert Success: ', response);
           cb(null, true);
 
         }).catch((err) => {
           if (err) {
-            console.log('Error updating max_ids: ', err);
+            console.log('Error updating next_ids: ', err);
             cb(err);
           }
         });
