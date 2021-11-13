@@ -3,7 +3,10 @@ const readline = require('readline');
 const mongoose = require('mongoose');
 const { reviewsSchema, charsReviewSchema, photosSchema, maxIdSchema } = require('./schemas.js');
 
-mongoose.connect('mongodb://localhost:27017/reviews_service?maxPoolSize=1000');
+mongoose.connect('mongodb://localhost:27017/reviews_service', {
+  useNewUrlParser: true,
+  maxPoolSize: 1000
+});
 
 const connection = mongoose.connection;
 
@@ -193,10 +196,13 @@ module.exports.getMetadata = (id, callback) => {
                 result.recommend[obj._id] = obj.ratings;
               });
               charsMeta.forEach( obj => {
-                result.characteristics[obj.name] = {
-                  'id': obj.characteristics[0]._id,
-                  'value': obj.characteristics[0].value.toLocaleString(undefined, {minimumFractionDigits: 4})
+                if (obj.characteristics[0] !== undefined) {
+                  result.characteristics[obj.name] = {
+                    'id': obj.characteristics[0].id,
+                    'value': obj.characteristics[0].value.toLocaleString(undefined, {minimumFractionDigits: 4})
+                  }
                 }
+
               });
               callback(null, result);
             }
@@ -306,7 +312,7 @@ module.exports.markHelpful = (reviewId, cb) => {
   let score;
   collection.findOne({ id: reviewId })
     .then(doc => {
-      console.log('helpful doc found: ', doc);
+      // console.log('helpful doc found: ', doc);
       score = doc.helpfulness + 1;
     })
     .catch(err => {
@@ -315,7 +321,7 @@ module.exports.markHelpful = (reviewId, cb) => {
     .then(() => {
       Review.findOneAndUpdate({ id: reviewId }, { helpfulness: score })
         .then((saved) => {
-          console.log('Helpful save response: ', saved);
+          // console.log('Helpful save response: ', saved);
           cb(null, saved);
           return;
         })
@@ -330,7 +336,7 @@ module.exports.reportReview = (reviewId, cb) => {
 
   Review.findOneAndUpdate({ id: reviewId }, { reported: true })
     .then((saved) => {
-      console.log('Report save response: ', saved);
+      // console.log('Report save response: ', saved);
       cb(null, saved);
       return;
     })

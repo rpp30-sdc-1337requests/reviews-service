@@ -105,4 +105,5 @@ dist
 
 # mine
 etlnotes.txt
-mongoDB.js
+k6script.js
+*.pem
