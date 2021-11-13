@@ -31,7 +31,7 @@ module.exports.charsReviewSchema = new Schema({
   value: { type: Number, required: true }
 });
 
-module.exports.maxIdSchema = new Schema({
+module.exports.nextIdSchema = new Schema({
   review_id: Number,
   chars_review_id: Number,
   photo_id: Number
