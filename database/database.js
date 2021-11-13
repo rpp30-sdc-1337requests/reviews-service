@@ -3,7 +3,7 @@ const readline = require('readline');
 const mongoose = require('mongoose');
 const { reviewsSchema, charsReviewSchema, photosSchema, nextIdSchema } = require('./schemas.js');
 
-mongoose.connect('mongodb://localhost:27017/reviews_service', {
+mongoose.connect(`mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@${INSTANCE_IP}:27017/reviews_service`, {
   useNewUrlParser: true,
   maxPoolSize: 1000
 });
