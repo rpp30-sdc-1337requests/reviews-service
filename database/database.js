@@ -10,7 +10,7 @@ mongoose.connect(`mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@${proc
 
 const connection = mongoose.connection;
 
-connection.on('error', console.error.bind(console, 'conection error: '));
+connection.on('error', (error) => { console.error('DB conection error: ', error)});
 
 // store next ids for data insertion
 const NextIds = mongoose.model('NextIds', nextIdSchema, 'next_ids' );
